@@ -51,7 +51,7 @@ The internal setup script will replace these:
 * `%%GITHUB_RELEASE_URL_PREFIX%%`: The base URL prefix for constructing release tag links.
     * Often the same as the pull request prefix.
 
-**How to Use (for Internal Tool Maintainers):**
+**How to Use (for Internal):**
 
 1.  Create an internal script within your organization's tooling repository.
 2.  This script should:
