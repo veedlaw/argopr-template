@@ -1,0 +1,68 @@
+# Core logic for the 'argopr' function (wrapped by setup script)
+
+# Ensure we are in a git repository
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    echo "Error: Not a git repository."
+    return 1
+fi
+
+# Ensure detect-tag-changes is available
+if ! command -v detect-tag-changes > /dev/null; then
+    echo "Error: 'detect-tag-changes' script not found in PATH."
+    echo "Please ensure it is installed (e.g., in \$HOME/bin) and \$HOME/bin is in your PATH."
+    return 1
+fi
+
+# Ensure GitHub CLI is installed and authenticated
+if ! command -v gh > /dev/null; then
+    echo "Error: GitHub CLI (gh) not found. Please install it."
+    return 1
+fi
+if ! gh auth status > /dev/null 2>&1; then
+     echo "Error: GitHub CLI not authenticated. Please run 'gh auth login'."
+     return 1
+fi
+
+local branch
+branch=$(git rev-parse --abbrev-ref HEAD)
+if [ -z "$branch" ] || [ "$branch" = "HEAD" ]; then
+    echo "Error: Could not determine current branch."
+    echo "You might be in a detached HEAD state."
+    return 1
+fi
+
+echo "Current branch for PR title: $branch"
+echo "Generating PR body using detect-tag-changes..."
+
+local pr_body
+# Capture stderr as well in case detect-tag-changes outputs errors or important info
+pr_body=$(detect-tag-changes 2>&1)
+
+if [ -z "$pr_body" ]; then
+    echo "Warning: PR body is empty. 'detect-tag-changes' might not have found any relevant changes or produced an error."
+    read -p "PR body is empty. Continue creating PR? (y/N) " -n 1 -r REPLY
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "PR creation aborted by user."
+        return 1
+    fi
+elif echo "$pr_body" | grep -q "No relevant changes detected"; then
+    echo -e "Note from detect-tag-changes:\n$pr_body"
+    read -p "No relevant changes detected for PR body. Continue creating PR with this note? (y/N) " -n 1 -r REPLY
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "PR creation aborted by user."
+        return 1
+    fi
+else
+    echo -e "Generated PR Body:\n$pr_body"
+fi
+
+echo "Creating PR on GitHub titled '$branch'..."
+# --web flag opens the PR in the browser after creation
+if gh pr create --title "$branch" --body "$pr_body" --web; then
+    echo "PR created successfully and opened in browser."
+else
+    echo "Error: Failed to create GitHub PR. Check GitHub CLI output above."
+    return 1
+fi

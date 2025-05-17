@@ -1,0 +1,8 @@
+# General ignores
+*.tmp
+*.swp
+*.bak
+
+# OS-specific
+.DS_Store
+Thumbs.db
