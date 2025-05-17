@@ -1,6 +1,7 @@
 # ArgoPR Template - be lazy without compromise
 
 `argopr` is a shell tool designed to streamline the creation of GitHub Pull Requests when updating image tags in Helm chart values files.
+<img width="1304" alt="argopr" src="https://github.com/user-attachments/assets/8616e435-1b70-46fd-8490-6be29860bc1a" />
 
 Ever look at a Helm chart Pull Request with the diff being `1.2.3` to `1.2.4` and wonder...
 * "Okay, but *what is my teammate acutally deploying* in this update?"
